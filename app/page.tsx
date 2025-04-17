@@ -1,103 +1,212 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import TransactionForm from '@/components/ui/TransactionForm';
+import TransactionList from '@/components/ui/TransactionList';
+import MonthlyChart from '@/components/ui/Charts/MonthlyChart';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Plus, AlertCircle } from 'lucide-react';
+
+interface Transaction {
+  _id: string;
+  amount: number;
+  category: string;
+  date: string;
+  description?: string;
+  type?: string;
+}
+
+interface FormTransaction {
+  _id?: string;
+  description: string;
+  amount: number | string;
+  date: Date | string;
+  category: string;
+  type: string;
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions' | 'add'>('dashboard');
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const response = await fetch('/api/transactions');
+        if (!response.ok) throw new Error('Failed to fetch transactions. Please try again later.');
+        const data = await response.json();
+        setTransactions(data);
+      } catch (err) {
+        setError((err as Error).message || 'An unexpected error occurred.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
+  const handleAddTransaction = async (formData: FormTransaction) => {
+    try {
+      setError(null);
+      const transactionData = {
+        amount: Number(formData.amount),
+        category: formData.category || 'Uncategorized',
+        date: formData.date instanceof Date ? formData.date.toISOString() : formData.date,
+        description: formData.description,
+        type: formData.type || 'expense'
+      };
+
+      const response = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(transactionData),
+      });
+
+      if (!response.ok) throw new Error('Failed to add transaction. Please try again.');
+      
+      const newTransaction = await response.json();
+      setTransactions((prev) => [...prev, newTransaction]);
+      setActiveTab('transactions');
+    } catch (err) {
+      setError((err as Error).message || 'An unexpected error occurred.');
+    }
+  };
+
+  const handleEditTransaction = async (formData: FormTransaction) => {
+    try {
+      setError(null);
+      if (!formData._id) throw new Error('Transaction ID is missing');
+      
+      const transactionData = {
+        _id: formData._id,
+        amount: Number(formData.amount),
+        category: formData.category || 'Uncategorized',
+        date: formData.date instanceof Date ? formData.date.toISOString() : formData.date,
+        description: formData.description,
+        type: formData.type || 'expense'
+      };
+
+      const response = await fetch(`/api/transactions/${formData._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(transactionData),
+      });
+
+      if (!response.ok) throw new Error('Failed to update transaction. Please try again.');
+      
+      const updatedTransaction = await response.json();
+      setTransactions((prev) =>
+        prev.map((t) => (t._id === updatedTransaction._id ? updatedTransaction : t))
+      );
+      setEditingTransaction(null);
+    } catch (err) {
+      setError((err as Error).message || 'An unexpected error occurred.');
+    }
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this transaction?')) return;
+    
+    try {
+      setError(null);
+      const response = await fetch(`/api/transactions/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete transaction. Please try again.');
+      
+      setTransactions((prev) => prev.filter((t) => t._id !== id));
+    } catch (err) {
+      setError((err as Error).message || 'An unexpected error occurred.');
+    }
+  };
+
+  return (
+    <main className="container mx-auto py-8 px-4">
+      <h1 className="text-3xl font-bold mb-8 text-center">Personal Finance Visualizer</h1>
+      
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <Tabs value={activeTab} onValueChange={(tabValue) => setActiveTab(tabValue as 'dashboard' | 'transactions' | 'add')}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="transactions">Transactions</TabsTrigger>
+          <TabsTrigger value="add">Add Transaction</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="dashboard" className="space-y-6">
+          <MonthlyChart transactions={transactions} />
+          
+          <div className="mt-8">
+            <h3 className="text-lg font-medium mb-2">Recent Transactions</h3>
+            {transactions.length > 0 ? (
+              <TransactionList 
+                transactions={transactions.slice(0, 5)} 
+                onEdit={setEditingTransaction}
+                onDelete={handleDeleteTransaction}
+              />
+            ) : (
+              <p className="text-gray-500">No transactions available.</p>
+            )}
+            <div className="mt-4 flex justify-end">
+              <Button variant="outline" onClick={() => setActiveTab('transactions')}>
+                View All Transactions
+              </Button>
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="transactions">
+          {transactions.length > 0 ? (
+            <TransactionList 
+              transactions={transactions}
+              onEdit={setEditingTransaction}
+              onDelete={handleDeleteTransaction}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          ) : (
+            <p className="text-gray-500">No transactions available.</p>
+          )}
+          
+          {editingTransaction && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg max-w-md w-full mx-4">
+                <TransactionForm 
+                  transaction={{
+                    _id: editingTransaction._id,
+                    description: editingTransaction.description || '',
+                    amount: editingTransaction.amount,
+                    date: editingTransaction.date,
+                    category: editingTransaction.category,
+                    type: editingTransaction.type || 'expense'
+                  }}
+                  onSubmit={handleEditTransaction}
+                  onCancel={() => setEditingTransaction(null)}
+                />
+              </div>
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="add">
+  <TransactionForm 
+    onSubmit={handleAddTransaction}
+    transaction={null}  // Explicitly pass null for new transactions
+    onCancel={() => setActiveTab('transactions')}  // Add cancel handler
+  />
+</TabsContent>
+      </Tabs>
+    </main>
   );
 }
