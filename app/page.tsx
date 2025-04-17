@@ -7,7 +7,7 @@ import MonthlyChart from '@/components/ui/Charts/MonthlyChart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Plus, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 interface Transaction {
   _id: string;
@@ -31,7 +31,6 @@ export default function Home() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions' | 'add'>('dashboard');
 
   useEffect(() => {
@@ -43,9 +42,7 @@ export default function Home() {
         setTransactions(data);
       } catch (err) {
         setError((err as Error).message || 'An unexpected error occurred.');
-      } finally {
-        setLoading(false);
-      }
+      } 
     };
 
     fetchTransactions();
