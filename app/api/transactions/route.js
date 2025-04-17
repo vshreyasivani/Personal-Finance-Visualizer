@@ -17,15 +17,32 @@ export async function GET() {
 
 // POST /api/transactions - Create a new transaction
 export async function POST(request) {
-  try {
-    const body = await request.json();
-    await connectToDatabase();
-    
-    const newTransaction = new Transaction(body);
-    await newTransaction.save();
-    
-    return NextResponse.json(newTransaction, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    try {
+      const body = await request.json();
+      
+      // VALIDATION - REJECT IF NO CATEGORY
+      if (!body.category || !['Food', 'Transport', 'Housing', 'Entertainment', 'Utilities', 'Other'].includes(body.category)) {
+        return NextResponse.json(
+          { error: 'Valid category is required' }, 
+          { status: 400 }
+        );
+      }
+  
+      await connectToDatabase();
+      
+      const newTransaction = new Transaction({
+        description: body.description,
+        amount: body.amount,
+        date: new Date(body.date),
+        type: body.type,
+        category: body.category // ENFORCE THIS FIELD
+      });
+  
+      const saved = await newTransaction.save();
+      console.log('SAVED WITH CATEGORY:', saved.category); // Verify
+      
+      return NextResponse.json(saved, { status: 201 });
+    } catch (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
   }
-}

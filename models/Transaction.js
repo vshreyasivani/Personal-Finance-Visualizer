@@ -21,6 +21,11 @@ const TransactionSchema = new mongoose.Schema({
     enum: ['expense', 'income'],
     default: 'expense',
   },
+  category: {
+    type: String,
+    enum: ['Food', 'Transport', 'Housing', 'Entertainment', 'Utilities', 'Other'],
+    required: true
+  },
   categoryId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
