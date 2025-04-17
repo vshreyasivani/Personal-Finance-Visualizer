@@ -1,62 +1,72 @@
 # Personal Finance Visualizer
 
 ## Overview
-A responsive web application for tracking personal finances built with Next.js, React, and shadcn/ui. This visualizer allows users to manage their financial transactions with add/edit/delete functionality and view their monthly expenses through interactive charts.
+A comprehensive personal finance management application built with Next.js, React, and shadcn/ui. This visualizer helps users track transactions, categorize spending, set budgets, and gain insights through interactive data visualizations.
 
 ## ✨ Features
-### Stage 1: Basic Transaction Tracking
-- **Transaction Management**:
-  - ✅ Add new transactions (amount, date, description)
-  - ✏️ Edit existing transactions
-  - 🗑️ Delete transactions
-- **Transaction List View**:
-  - 📋 View all transactions in a clean, sortable list
-- **Data Visualization**:
-  - 📊 Monthly expenses bar chart using Recharts
-- **Form Validation**:
-  - ✔️ Client-side validation for all input fields
-- **Responsive Design**:
-  - 📱 Works on mobile, tablet, and desktop devices
-- **Error Handling**:
-  - ❗ Proper error states for API failures and form validation
 
-## 🛠️ Technologies Used
+### 📌 Core Features
+- **Transaction Management**:
+  - ✅ Add, edit, and delete transactions
+  - 📋 Clean, sortable transaction list
+- **Responsive Design**:
+  - 📱 Fully responsive across all devices
+- **Form Validation**:
+  - ✔️ Client-side validation for all inputs
+- **Error Handling**:
+  - ❗ Clear error states for API failures
+
+### 🗂️ Stage 2: Category Management
+- **Transaction Categorization**:
+  - 🏷️ Predefined spending categories
+  - 🔄 Easy category assignment
+- **Visual Analytics**:
+  - 📊 Category-wise pie chart
+- **Enhanced Dashboard**:
+  - 💳 Summary cards (total expenses, recent transactions)
+  - 📈 Category breakdown visualization
+
+### 💰 Stage 3: Budgeting System
+- **Budget Management**:
+  - 🗓️ Monthly category budgets
+  - ✏️ Add budget limits
+- **Budget Tracking**:
+  - 📉 Budget vs. actual comparison chart
+  - 
+
+## 🛠️ Technology Stack
 | Category       | Technologies                          |
 |----------------|---------------------------------------|
-| **Frontend**   | Next.js (App Router), React           |
+| **Frontend**   | Next.js (App Router), React, TypeScript|
 | **UI Library** | shadcn/ui (Radix UI + Tailwind CSS)   |
-| **Charts**     | Recharts                              |
+| **Data Viz**   | Recharts                              |
+| **State**      | React hooks (useState, useEffect)     |
 | **Backend**    | Next.js API Routes                    |
 | **Database**   | MongoDB (via Mongoose)                |
 | **Deployment** | Vercel                                |
 
 ## 🌐 Live Demo
-The application is deployed on Vercel:  
+Experience the application live:  
 🔗 [Live Demo](https://personal-finance-visualizer.vercel.app)
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js (v18 or higher)
-- MongoDB Atlas account (for database)
-- Git (for version control)
+- Node.js (v18+)
+- MongoDB Atlas account
+- Git
 
 ### Installation
 ```bash
-# Clone the repository
+# Clone repository
 git clone git@github.com:vshreyasivani/Personal-Finance-Visualizer.git
 cd personal-finance-visualizer
 
 # Install dependencies
 npm install
-# or
-yarn install
 
-# Set up environment variables
-echo "MONGODB_URI=your_mongodb_connection_string" > .env.local
-echo "NEXT_PUBLIC_APP_ENV=development" >> .env.local
+# Configure environment
+cp .env.local
 
-# Run the development server
+# Start development server
 npm run dev
-# or
-yarn dev
