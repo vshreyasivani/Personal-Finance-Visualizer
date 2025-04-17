@@ -47,7 +47,7 @@ A comprehensive personal finance management application built with Next.js, Reac
 
 ## 🌐 Live Demo
 Experience the application live:  
-🔗 [Live Demo](https://personal-finance-visualizer.vercel.app)
+🔗 [Live Demo](https://personal-finance-visualizer-three-delta.vercel.app)
 
 ## 🚀 Getting Started
 
